@@ -9,10 +9,16 @@ async function getSubListsRecursive(listId: string) {
     include: {
       albums: true,
       subLists: {
-        include: { albums: true, subLists: { include: { albums: true } } }
+        include: {
+          albums: true,
+          subLists: {
+            include: { albums: true }
+          }
+        }
       }
     }
   })
+
   if (!list) return null
 
   list.subLists = (
@@ -28,6 +34,7 @@ async function updateListRecursive(listData: any, userId: string) {
     where: { id: listData.id },
     include: { albums: true, subLists: true }
   })
+
   if (!existingList || existingList.userId !== userId) return null
 
   await prisma.album.deleteMany({
@@ -37,7 +44,6 @@ async function updateListRecursive(listData: any, userId: string) {
     }
   })
 
-  // Atualiza a lista e faz upsert nos álbuns restantes
   const updatedList = await prisma.list.update({
     where: { id: listData.id },
     data: {
@@ -65,7 +71,6 @@ async function updateListRecursive(listData: any, userId: string) {
     include: { albums: true, subLists: true }
   })
 
-  // Atualiza recursivamente sublistas
   if (listData.subLists?.length > 0) {
     for (const sub of listData.subLists) {
       await updateListRecursive(sub, userId)
@@ -89,12 +94,12 @@ async function deleteListRecursive(listId: string) {
   await prisma.list.delete({ where: { id: listId } })
 }
 
-
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = context.params
     const user = await getUserFromCookie(req)
-    if (!user || user.id !== id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!user || user.id !== id)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const rootLists = await prisma.list.findMany({
       where: { userId: user.id, parentId: null },
@@ -113,9 +118,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const { id } = params
+    const { id } = context.params
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id) return unauthorizedResponse()
 
@@ -164,6 +169,7 @@ export async function PUT(request: NextRequest) {
           data: { position: l.position }
         })
       )
+
       await Promise.all(updatePromises)
 
       const rootLists = await prisma.list.findMany({
@@ -179,9 +185,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Atualização de lista/sublistas individual
-    if (!data.id) return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
+    if (!data.id)
+      return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
+
     const updatedList = await updateListRecursive(data, user.id)
-    if (!updatedList) return NextResponse.json({ error: 'Lista não encontrada ou não autorizada' }, { status: 404 })
+    if (!updatedList)
+      return NextResponse.json({ error: 'Lista não encontrada ou não autorizada' }, { status: 404 })
+
     return NextResponse.json(updatedList, { status: 200 })
   } catch (error) {
     console.error('Error updating list:', error)
@@ -190,20 +200,24 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE: exclui lista/sublistas recursivamente
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const user = await getUserFromCookie(request)
+    const user = await getUserFromCookie(req)
     if (!user) return unauthorizedResponse()
 
-    const url = new URL(request.url)
+    const url = new URL(req.url)
     const listId = url.searchParams.get('listId')
-    if (!listId) return NextResponse.json({ error: 'listId obrigatório' }, { status: 400 })
+    if (!listId)
+      return NextResponse.json({ error: 'listId obrigatório' }, { status: 400 })
 
     const list = await prisma.list.findUnique({ where: { id: listId } })
-    if (!list) return NextResponse.json({ error: 'Lista não encontrada' }, { status: 404 })
+    if (!list)
+      return NextResponse.json({ error: 'Lista não encontrada' }, { status: 404 })
+
     if (list.userId !== user.id) return unauthorizedResponse()
 
     await deleteListRecursive(listId)
+
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
     console.error('Erro ao deletar lista:', error)
@@ -212,5 +226,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 }
 
 // Helpers
-const unauthorizedResponse = () => NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-const errorResponse = (error: any) => NextResponse.json({ error: error.message || 'Erro no servidor' }, { status: 500 })
+const unauthorizedResponse = () =>
+  NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+
+const errorResponse = (error: any) =>
+  NextResponse.json({ error: error.message || 'Erro no servidor' }, { status: 500 })
