@@ -89,11 +89,11 @@ async function deleteListRecursive(listId: string) {
   await prisma.list.delete({ where: { id: listId } })
 }
 
-// GET: todas as listas do usuário com sublistas recursivas
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = await context.params
-    const user = await getUserFromCookie(request)
+    const { id } = params
+    const user = await getUserFromCookie(req)
     if (!user || user.id !== id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const rootLists = await prisma.list.findMany({
@@ -106,24 +106,21 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       await Promise.all(rootLists.map(list => getSubListsRecursive(list.id)))
     ).filter((list): list is NonNullable<typeof list> => list !== null)
 
-    return NextResponse.json(listsWithDepth, { status: 200 })
+    return NextResponse.json(listsWithDepth)
   } catch (error) {
     console.error('Error fetching lists:', error)
     return NextResponse.json({ error: "Failed to fetch lists" }, { status: 500 })
   }
 }
 
-// POST: cria listas/sublistas recursivamente
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { params } = context;
-    const id = params.id;
-    const user = await getUserFromCookie(req);
-    if (!user || user.id !== id) return unauthorizedResponse();
+    const { id } = params
+    const user = await getUserFromCookie(req)
+    if (!user || user.id !== id) return unauthorizedResponse()
 
-    const { list } = await req.json();
+    const { list } = await req.json()
 
-    // Cria a lista no banco de dados
     const createdList = await prisma.list.create({
       data: {
         id: list.id || undefined,
@@ -141,16 +138,13 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
           })) || []
         }
       },
-      include: {
-        albums: true,
-        subLists: true
-      }
-    });
+      include: { albums: true, subLists: true }
+    })
 
-    return NextResponse.json(createdList, { status: 201 });
+    return NextResponse.json(createdList, { status: 201 })
   } catch (error) {
-    console.error('Error creating list:', error);
-    return errorResponse(error);
+    console.error('Error creating list:', error)
+    return errorResponse(error)
   }
 }
 
