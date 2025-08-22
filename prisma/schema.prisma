@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Prisma usa isso para migrations
+}
+
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  lists    List[]
+}
+
+model List {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  albums      Album[]
+  subLists    List[]   @relation("SubLists")
+  parentId    String?
+  parent      List?    @relation("SubLists", fields: [parentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  position    Int      @default(0)
+}
+
+model Album {
+  id       String  @id @default(cuid())
+  name     String
+  artist   String
+  year     Int?
+  imageUrl String?
+  listId   String
+  list     List    @relation(fields: [listId], references: [id], onDelete: Cascade)
+}
