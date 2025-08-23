@@ -95,12 +95,9 @@ async function deleteListRecursive(listId: string) {
 }
 
 // GET
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, context: any) {
   try {
-    const { id } = params
+    const { id } = context.params
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -123,12 +120,9 @@ export async function GET(
 }
 
 // POST
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, context: any) {
   try {
-    const { id } = params
+    const { id } = context.params
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id) return unauthorizedResponse()
 
@@ -161,7 +155,7 @@ export async function POST(
   }
 }
 
-// PUT: atualiza lista/sublistas ou ordem das listas raiz
+// PUT
 export async function PUT(req: NextRequest) {
   try {
     const user = await getUserFromCookie(req)
@@ -169,7 +163,6 @@ export async function PUT(req: NextRequest) {
 
     const data = await req.json()
 
-    // Atualização de ordem de listas raiz
     if (Array.isArray(data.orderedLists)) {
       const updatePromises = data.orderedLists.map((l: any) =>
         prisma.list.update({
@@ -192,7 +185,6 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(listsWithDepth, { status: 200 })
     }
 
-    // Atualização de lista/sublistas individual
     if (!data.id)
       return NextResponse.json({ error: 'ID obrigatório' }, { status: 400 })
 
@@ -208,10 +200,7 @@ export async function PUT(req: NextRequest) {
 }
 
 // DELETE
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, context: any) {
   try {
     const user = await getUserFromCookie(req)
     if (!user) return unauthorizedResponse()
