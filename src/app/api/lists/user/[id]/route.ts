@@ -94,9 +94,13 @@ async function deleteListRecursive(listId: string) {
   await prisma.list.delete({ where: { id: listId } })
 }
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
+// GET
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = context.params
+    const { id } = params
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -118,9 +122,13 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function POST(req: NextRequest, context: { params: { id: string } }) {
+// POST
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
-    const { id } = context.params
+    const { id } = params
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id) return unauthorizedResponse()
 
@@ -154,12 +162,12 @@ export async function POST(req: NextRequest, context: { params: { id: string } }
 }
 
 // PUT: atualiza lista/sublistas ou ordem das listas raiz
-export async function PUT(request: NextRequest) {
+export async function PUT(req: NextRequest) {
   try {
-    const user = await getUserFromCookie(request)
+    const user = await getUserFromCookie(req)
     if (!user) return unauthorizedResponse()
 
-    const data = await request.json()
+    const data = await req.json()
 
     // Atualização de ordem de listas raiz
     if (Array.isArray(data.orderedLists)) {
@@ -199,8 +207,11 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE: exclui lista/sublistas recursivamente
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+// DELETE
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const user = await getUserFromCookie(req)
     if (!user) return unauthorizedResponse()
