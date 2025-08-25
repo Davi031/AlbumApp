@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
         const user = await getUserFromCookie(req) 
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        const { searchParams } = new URL(req.url)
+        const { searchParams } = req.nextUrl
         const listId = searchParams.get('listId')
 
         if (!listId) return NextResponse.json({ error: 'listId obrigatório' }, { status: 400 })
