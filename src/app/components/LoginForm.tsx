@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-export default function LoginPage() {
+export default function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault()
     try {
       await login(email, password)
-      router.push('/') 
+      router.push('/')
     } catch (err) {
       setError('Credenciais inválidas')
       console.error('Erro no login:', err)
@@ -23,52 +23,56 @@ export default function LoginPage() {
   }
 
   return (
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-96">
-        {error && <div className="mb-4 text-red-500">{error}</div>}
-        <div className="mb-4">
-          <label className="block text-black mb-2" htmlFor="email">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border rounded text-gray-700"
-            required
-          />
-        </div>
-        
-        <div className="mb-6">
-          <label className="block text-black mb-2" htmlFor="password">
-            Senha
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded text-gray-700"
-            required
-          />
-        </div>
-        
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-6 sm:p-8 rounded-2xl shadow-md w-full max-w-sm"
+    >
+      {error && <div className="mb-4 text-red-500 text-sm">{error}</div>}
+
+      <div className="mb-4">
+        <label className="block text-gray-800 mb-2 text-sm sm:text-base" htmlFor="email">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-gray-800 mb-2 text-sm sm:text-base" htmlFor="password">
+          Senha
+        </label>
+        <input
+          id="password"
+          type="text"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="cursor-pointer w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+      >
+        Entrar
+      </button>
+
+      <div className="mt-4 text-center">
         <button
-          type="submit"
-          className="cursor-pointer w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          type="button"
+          onClick={() => router.push('/register')}
+          className="text-blue-600 hover:underline text-sm sm:text-base"
         >
-          Entrar
+          Criar nova conta
         </button>
-        
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={() => router.push('/register')}
-            className="text-blue-500 hover:underline"
-          >
-            Criar nova conta
-          </button>
-        </div>
-      </form>
+      </div>
+    </form>
   )
 }

@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetcher } from '@/lib/fetcher'
-import { API_URL } from '@/lib/api'
 
 interface AuthContextType {
   user: any
@@ -22,32 +21,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Inicializa a autenticação
   useEffect(() => {
-  const initializeAuth = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/profile`, {
-        credentials: 'include' 
-      })
+    const initializeAuth = async () => {
+      try {
+        const res = await fetch('/api/profile', {
+          credentials: 'include',
+        })
 
-      if (!res.ok) {
+        if (!res.ok) {
+          setUser(null)
+        } else {
+          const data = await res.json()
+          setUser(data.user)
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error)
         setUser(null)
-      } else {
-        const data = await res.json()
-        setUser(data.user) 
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error)
-      setUser(null)
-    } finally {
-      setLoading(false)
     }
-  }
 
-  initializeAuth()
-}, [])
+    initializeAuth()
+  }, [])
 
   const login = async (email: string, password: string) => {
-    const data = await fetcher(`${API_URL}/api/login`, {
+    const data = await fetcher('/api/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await fetcher(`${API_URL}/api/logout`, { method: 'POST' })
+      await fetcher('/api/logout', { method: 'POST' })
     } finally {
       localStorage.removeItem('token')
       setToken(null)
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const register = async (email: string, password: string) => {
-    const data = await fetcher(`${API_URL}/api/register`, {
+    const data = await fetcher('/api/register', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
