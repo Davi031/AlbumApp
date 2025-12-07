@@ -62,7 +62,6 @@ export default function AlbumCard({ album }: { album: Album }) {
     }
   }
 
-  // renderiza listas recursivamente; usa margin-left inline para indent dinamico
   const renderLists = (items: any[], level = 0) => {
     return items.map((list) => {
       const hasSubs = list.subLists && list.subLists.length > 0
@@ -70,10 +69,8 @@ export default function AlbumCard({ album }: { album: Album }) {
 
       const handleListClick = () => {
         if (hasSubs) {
-          // Abre/fecha sublistas
           toggleExpand(list.id)
         } else {
-          // Lista final → executa ação (copiar/mover)
           selectedAction === "copy"
             ? handleCopy(list.id)
             : handleMove(list.id)
