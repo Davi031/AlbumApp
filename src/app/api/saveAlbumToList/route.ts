@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { albumId, listId, name, imageUrl, artist } = await req.json()
+    const { nameAlbum, listId, name, imageUrl, artist } = await req.json()
 
     const album = await prisma.album.create({
       data: {

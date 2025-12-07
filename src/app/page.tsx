@@ -21,12 +21,12 @@ export default function HomePage() {
   const { lists, fetchLists, updateRootListsOrder } = useListContext()
   const [openLists, setOpenLists] = useState<Record<string, boolean>>({})
   const [rootLists, setRootLists] = useState<any[]>([])
-  const [loadingLists, setLoadingLists] = useState(true) // 👈 novo estado
+  const [loadingLists, setLoadingLists] = useState(true) 
 
   useEffect(() => {
     if (!loading && user) {
       setLoadingLists(true)
-      fetchLists().finally(() => setLoadingLists(false)) // 👈 marca quando terminou
+      fetchLists().finally(() => setLoadingLists(false)) 
     }
   }, [loading, user, fetchLists])
 
