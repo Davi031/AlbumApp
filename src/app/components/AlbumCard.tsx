@@ -10,7 +10,7 @@ interface Album {
   artist: string
   year?: number
   imageUrl: string | null
-  listId: string
+  listId?: string
 }
 
 export default function AlbumCard({ album }: { album: Album }) {
@@ -51,7 +51,7 @@ export default function AlbumCard({ album }: { album: Album }) {
   const handleMove = async (listId: string) => {
     try {
       setLoadingTargetId(listId)
-      await moveAlbumToList(album, album.listId ?? '', listId) // se sua moveAlbumToList espera currentListId, ajuste conforme
+      await moveAlbumToList(album, '', listId)
       showToast('success', 'Álbum movido!')
     } catch (err: any) {
       console.error(err)
