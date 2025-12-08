@@ -13,7 +13,7 @@ interface Album {
   listId?: string
 }
 
-export default function AlbumCard({ album }: { album: Album }) {
+export default function AlbumCard({ album }: { album: any }) {
   const { lists = [], copyAlbumToList, moveAlbumToList } = useListContext()
 
   const [selectedAction, setSelectedAction] = useState<"copy" | "move" | null>(null)
