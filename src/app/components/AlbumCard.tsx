@@ -10,6 +10,7 @@ interface Album {
   artist: string
   year?: number
   imageUrl: string | null
+  listId: string
 }
 
 export default function AlbumCard({ album }: { album: Album }) {
