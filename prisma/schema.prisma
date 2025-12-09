@@ -3,11 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
-
 model User {
   id       String @id @default(uuid())
   email    String @unique
@@ -31,11 +28,11 @@ model List {
 }
 
 model Album {
-  id       String  @id @default(cuid())
+  id       String @id @default(cuid())
   name     String
   artist   String
   year     Int?
   imageUrl String?
   listId   String
-  list     List    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  list     List @relation(fields: [listId], references: [id], onDelete: Cascade)
 }
