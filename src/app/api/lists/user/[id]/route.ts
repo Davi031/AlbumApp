@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromCookie } from '@/lib/auth'
 
-// Função recursiva para obter sublistas completas
+// --- Helper Functions (No changes needed here) ---
+
 async function getSubListsRecursive(listId: string) {
   const list = await prisma.list.findUnique({
     where: { id: listId },
@@ -28,7 +29,6 @@ async function getSubListsRecursive(listId: string) {
   return list
 }
 
-// Função recursiva para atualizar lista/sublistas
 async function updateListRecursive(listData: any, userId: string) {
   const existingList = await prisma.list.findUnique({
     where: { id: listData.id },
@@ -80,7 +80,6 @@ async function updateListRecursive(listData: any, userId: string) {
   return await getSubListsRecursive(updatedList.id)
 }
 
-// Função recursiva para deletar lista/sublistas
 async function deleteListRecursive(listId: string) {
   const subLists = await prisma.list.findMany({
     where: { parentId: listId },
@@ -94,10 +93,18 @@ async function deleteListRecursive(listId: string) {
   await prisma.list.delete({ where: { id: listId } })
 }
 
+// --- Route Handlers ---
+
 // GET
-export async function GET(req: NextRequest, context: any) {
+// ✅ FIX: Type params as a Promise and await it
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> } 
+) {
   try {
-    const { id } = context.params
+    // ✅ FIX: Await the params before using them
+    const { id } = await params 
+    
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -120,9 +127,15 @@ export async function GET(req: NextRequest, context: any) {
 }
 
 // POST
-export async function POST(req: NextRequest, context: any) {
+// ✅ FIX: Type params as a Promise and await it
+export async function POST(
+  req: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = context.params
+    // ✅ FIX: Await the params before using them
+    const { id } = await params 
+
     const user = await getUserFromCookie(req)
     if (!user || user.id !== id) return unauthorizedResponse()
 
@@ -164,6 +177,7 @@ export async function PUT(req: NextRequest) {
     const data = await req.json()
 
     if (Array.isArray(data.orderedLists)) {
+      // Use transaction for better safety/performance (Optional optimization)
       const updatePromises = data.orderedLists.map((l: any) =>
         prisma.list.update({
           where: { id: l.id },
@@ -171,7 +185,7 @@ export async function PUT(req: NextRequest) {
         })
       )
 
-      await Promise.all(updatePromises)
+      await prisma.$transaction(updatePromises)
 
       const rootLists = await prisma.list.findMany({
         where: { userId: user.id, parentId: null },
@@ -200,13 +214,16 @@ export async function PUT(req: NextRequest) {
 }
 
 // DELETE
-export async function DELETE(req: NextRequest, context: any) {
+// Note: DELETE doesn't use the [id] param here (it uses query param ?listId),
+// so it doesn't strictly need changes, but it's good to keep consistent types.
+export async function DELETE(req: NextRequest) {
   try {
     const user = await getUserFromCookie(req)
     if (!user) return unauthorizedResponse()
 
     const url = new URL(req.url)
     const listId = url.searchParams.get('listId')
+    
     if (!listId)
       return NextResponse.json({ error: 'listId obrigatório' }, { status: 400 })
 
