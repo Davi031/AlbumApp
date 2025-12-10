@@ -43,7 +43,7 @@ async function updateListRecursive(listData: any, userId: string) {
       id: { notIn: (listData.albums || []).map((a: any) => a.id) }
     }
   })
-
+  
   const updatedList = await prisma.list.update({
     where: { id: listData.id },
     data: {
